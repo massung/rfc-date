@@ -113,7 +113,7 @@
        $6
      (encode-universal-time ss mm hh $3 (1+ $4) $5 (- (/ $7 100)))))
   ((rfc822 :error)
-   (warn "Illegal RFC822 date")))
+   (error "Illegal RFC822 date")))
 
 (defparser rfc3339-date-parser
   ((start rfc3339) $1)
@@ -124,7 +124,7 @@
        $4
      (encode-universal-time ss mm hh $3 $2 $1 $5)))
   ((rfc3339 :error)
-   (warn "Illegal RFC3339 date")))
+   (error "Illegal RFC3339 date")))
 
 (defun encode-universal-rfc822-time (date-time-string)
   "Encode a universal time from the format ddd, dd MMM yyyy HH:mm:ss tz."
