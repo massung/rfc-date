@@ -111,7 +111,9 @@
   ((rfc822 :day-of-week :comma :day :month :year :time :tz)
    (destructuring-bind (hh mm ss)
        $6
-     (encode-universal-time ss mm hh $3 (1+ $4) $5 (- (/ $7 100))))))
+     (encode-universal-time ss mm hh $3 (1+ $4) $5 (- (/ $7 100)))))
+  ((rfc822 :error)
+   (warn "Illegal RFC822 date")))
 
 (defparser rfc3339-date-parser
   ((start rfc3339) $1)
@@ -120,15 +122,21 @@
   ((rfc3339 :year :month :day :time :tz)
    (destructuring-bind (hh mm ss)
        $4
-     (encode-universal-time ss mm hh $3 $2 $1 $5))))
+     (encode-universal-time ss mm hh $3 $2 $1 $5)))
+  ((rfc3339 :error)
+   (warn "Illegal RFC3339 date")))
 
 (defun encode-universal-rfc822-time (date-time-string)
   "Encode a universal time from the format ddd, dd MMM yyyy HH:mm:ss tz."
-  (parse #'rfc822-date-parser (tokenize #'rfc822-date-lexer date-time-string)))
-
+  (handler-case
+      (parse #'rfc822-date-parser (tokenize #'rfc822-date-lexer date-time-string))
+    (condition (c) nil)))
+  
 (defun encode-universal-rfc3339-time (date-time-string)
   "Encode a universal time from the format yyyy-MM-ddTHH:mm:ss.fracTZ."
-  (parse #'rfc3339-date-parser (tokenize #'rfc3339-date-lexer date-time-string)))
+  (handler-case
+      (parse #'rfc3339-date-parser (tokenize #'rfc3339-date-lexer date-time-string))
+    (condition (c) nil)))
 
 (defun decode-universal-rfc822-time (time)
   "Decode a universal time into the format ddd, dd MMM yyyy HH:mm:ss tz."
