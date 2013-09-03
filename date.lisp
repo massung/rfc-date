@@ -111,7 +111,7 @@
   ((rfc822 :day-of-week :comma :day :month :year :time :tz)
    (destructuring-bind (hh mm ss)
        $6
-     (encode-universal-time ss mm hh $3 (1+ $4) $5 (- (/ $7 100)))))
+     (encode-universal-time ss mm hh $3 (1+ $4) $5 (- $7))))
   ((rfc822 :error)
    (error "Illegal RFC822 date")))
 
