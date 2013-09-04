@@ -62,7 +62,7 @@
     (let ((zone (assoc name +zones+ :test #'string-equal)))
       (if (null zone)
           0
-        (second zone)))))
+        (/ (second zone) 100)))))
 
 (deflexer rfc822-date-lexer
   ("%s+"                    :next-token)
