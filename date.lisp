@@ -142,11 +142,11 @@
   "Decode a universal time into the format ddd, dd MMM yyyy HH:mm:ss tz."
   (multiple-value-bind (ss mm hh date month year day-of-week dst-p tz)
       (decode-universal-time time)
-    (declare (ignore dst-p))
-    (multiple-value-bind (tzh tzf)
+    (multiple-value-bind (tz tzf)
         (truncate (abs tz))
       (let ((day (nth day-of-week +days+))
             (month (nth (1- month) +months+))
+            (tzh (if dst-p (1- tz) tz))
             (tzm (if tzf (* tzf 60) 0)))
         (format nil +rfc822+ day date month year hh mm ss (plusp tz) tzh tzm)))))
 
@@ -154,8 +154,9 @@
   "Decode a universal time into the format yyyy-MM-ddYHH:mm:ss+/-hh:mm."
   (multiple-value-bind (ss mm hh date month year day-of-week dst-p tz)
       (decode-universal-time time)
-    (declare (ignore dst-p day-of-week))
-    (multiple-value-bind (tzh tzf)
+    (declare (ignore day-of-week))
+    (multiple-value-bind (tz tzf)
         (truncate (abs tz))
-      (let ((tzm (if tzf (* tzf 60) 0)))
+      (let ((tzh (if dst-p (1- tz) tz))
+            (tzm (if tzf (* tzf 60) 0)))
         (format nil +rfc3339+ year month date hh mm ss (plusp tz) tzh tzm)))))
