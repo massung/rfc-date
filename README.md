@@ -1,6 +1,6 @@
 # Date Parsing for LispWorks
 
-The `date` package is a small [RFC822](http://tools.ietf.org/html/rfc2822.html#section-3.3) and [RFC3339](http://www.ietf.org/rfc/rfc3339.txt) internet date parsing formats. It can also convert a universal time to those formats as well.
+The `rfc-date` package is a small [RFC822](http://tools.ietf.org/html/rfc2822.html#section-3.3) and [RFC3339](http://www.ietf.org/rfc/rfc3339.txt) internet date parsing formats. It can also convert a universal time to those formats as well.
 
 ## Quickstart
 

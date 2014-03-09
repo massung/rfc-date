@@ -17,7 +17,7 @@
 ;;;; under the License.
 ;;;;
 
-(defpackage :date
+(defpackage :rfc-date
   (:use :cl :re :lex :parsergen)
   (:export
    #:encode-universal-rfc822-time
@@ -25,7 +25,7 @@
    #:decode-universal-rfc822-time
    #:decode-universal-rfc3339-time))
 
-(in-package :date)
+(in-package :rfc-date)
 
 (defconstant +days+ '("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
   "Days of the week in RFC822 format.")
