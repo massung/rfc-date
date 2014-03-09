@@ -1,7 +1,7 @@
 (defpackage :rfc-date-asd
   (:use :cl :asdf))
 
-(in-package :date-asd)
+(in-package :rfc-date-asd)
 
 (defsystem :rfc-date
   :name "rfc-date"
