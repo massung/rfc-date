@@ -122,7 +122,7 @@
   ((rfc3339 :year :month :day :time :tz)
    (destructuring-bind (hh mm ss)
        $4
-     (encode-universal-time ss mm hh $3 $2 $1 $5)))
+     (encode-universal-time ss mm hh $3 $2 $1 (- $5))))
   ((rfc3339 :error)
    (error "Illegal RFC3339 date")))
 
