@@ -93,14 +93,14 @@
                                                 (parse-integer $3))))
 
   ;; partial second (ignored since common lisp doesn't use it in universal time)
-  ("%.%d%d"                 (values :next-token))
+  ("%.%d%d*"                (values :next-token))
 
   ;; year, month, day
   ("(%d%d%d%d)%-"           (values :year (parse-integer $1)))
   ("(%d%d)%-"               (values :month (parse-integer $1)))
   ("(%d%d)"                 (values :day (parse-integer $1)))
 
-  ;; time zone letter
+  ;; time + zone letter
   ("([+%-]%d%d):(%d%d)"     (values :tz (time-zone (parse-integer $1) (parse-integer $2))))
   ("%a"                     (values :tz (military-time-zone (char $$ 0)))))
 
