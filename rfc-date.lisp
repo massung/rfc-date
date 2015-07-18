@@ -64,7 +64,7 @@
           0
         (/ (second zone) 100)))))
 
-(deflexer rfc822-date-lexer
+(deflexer rfc822-date-lexer (s)
   ("%s+"                    :next-token)
   (","                      :comma)
 
@@ -87,7 +87,7 @@
                              (t
                               (values :tz (rfc822-time-zone $$))))))
 
-(deflexer rfc3339-date-lexer
+(deflexer rfc3339-date-lexer (s)
   ("T(%d%d):(%d%d):(%d%d)"  (values :time (list (parse-integer $1)
                                                 (parse-integer $2)
                                                 (parse-integer $3))))
@@ -129,13 +129,13 @@
 (defun encode-universal-rfc822-time (date-time-string)
   "Encode a universal time from the format ddd, dd MMM yyyy HH:mm:ss tz."
   (handler-case
-      (parse #'rfc822-date-parser (tokenize #'rfc822-date-lexer date-time-string))
+      (parse #'rfc822-date-parser #'rfc822-date-lexer date-time-string)
     (condition (c) nil)))
   
 (defun encode-universal-rfc3339-time (date-time-string)
   "Encode a universal time from the format yyyy-MM-ddTHH:mm:ss.fracTZ."
   (handler-case
-      (parse #'rfc3339-date-parser (tokenize #'rfc3339-date-lexer date-time-string))
+      (parse #'rfc3339-date-parser #'rfc3339-date-lexer date-time-string)
     (condition (c) nil)))
 
 (defun decode-universal-rfc822-time (time)
