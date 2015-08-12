@@ -1,6 +1,6 @@
-;;;; RFC822/Internet Date Parser for LispWorks
+;;;; RFC822 & RFC3339 Date/Time Parser for Common Lisp
 ;;;;
-;;;; Copyright (c) 2013 by Jeffrey Massung
+;;;; Copyright (c) Jeffrey Massung
 ;;;;
 ;;;; This file is provided to you under the Apache License,
 ;;;; Version 2.0 (the "License"); you may not use this file
@@ -18,7 +18,7 @@
 ;;;;
 
 (defpackage :rfc-date
-  (:use :cl :re :lex :parsergen)
+  (:use :cl :re :lexer :parse)
   (:export
    #:encode-universal-rfc822-time
    #:encode-universal-rfc3339-time
@@ -27,20 +27,41 @@
 
 (in-package :rfc-date)
 
-(defconstant +days+ '("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
+;;; ----------------------------------------------------
+
+(defconstant +days+
+  '("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
   "Days of the week in RFC822 format.")
-(defconstant +months+ '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
+
+;;; ----------------------------------------------------
+
+(defconstant +months+
+  '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
   "Months of the year in RFC822 format.")
-(defconstant +rfc822+ "~a, ~a ~a ~a ~2,'0d:~2,'0d:~2,'0d ~:[+~2,'0d~2,'0d~;-~2,'0d~2,'0d~]"
+
+;;; ----------------------------------------------------
+
+(defconstant +rfc822+
+  "~a, ~a ~a ~a ~2,'0d:~2,'0d:~2,'0d ~:[+~2,'0d~2,'0d~;-~2,'0d~2,'0d~]"
   "Format used for RFC822 dates.")
-(defconstant +rfc3339+ "~a-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d~:[+~2,'0d:~2,'0d~;-~2,'0d:~2,'0d~]"
+
+;;; ----------------------------------------------------
+
+(defconstant +rfc3339+
+  "~a-~2,'0d-~2,'0dT~2,'0d:~2,'0d:~2,'0d~:[+~2,'0d:~2,'0d~;-~2,'0d:~2,'0d~]"
   "Format used for RFC3339 dates.")
-(defconstant +zones+ '(("GMT" +000) ("UT"  +000)
-                       ("EST" -500) ("EDT" -400)
-                       ("CST" -600) ("CDT" -500)
-                       ("MST" -700) ("MDT" -600)
-                       ("PST" -800) ("PDT" -700))
+
+;;; ----------------------------------------------------
+
+(defconstant +zones+
+  '(("GMT" +000) ("UT"  +000)
+    ("EST" -500) ("EDT" -400)
+    ("CST" -600) ("CDT" -500)
+    ("MST" -700) ("MDT" -600)
+    ("PST" -800) ("PDT" -700))
   "Named time zones for RFC822 dates.")
+
+;;; ----------------------------------------------------
 
 (defun military-time-zone (c)
   "Convert a character to a time zone."
@@ -51,9 +72,13 @@
      ((<= 75 n 77) (+ 10 (- n 75))) ; [K,M]
      (t 0))))
 
+;;; ----------------------------------------------------
+
 (defun time-zone (hh mm)
   "Convert an -hh:mm time to a time zone fraction."
   (+ hh (/ (* mm 60) 3600)))
+
+;;; ----------------------------------------------------
 
 (defun rfc822-time-zone (name)
   "Use either +zones+ or a military time zone."
@@ -64,79 +89,112 @@
           0
         (/ (second zone) 100)))))
 
+;;; ----------------------------------------------------
+
 (deflexer rfc822-date-lexer (s)
-  ("%s+"                    :next-token)
-  (","                      :comma)
+  ("%s+"   :next-token)
+  (","     :comma)
 
   ;; time of day
-  ("(%d%d):(%d%d):(%d%d)"   (values :time (list (parse-integer $1)
-                                                (parse-integer $2)
-                                                (parse-integer $3))))
-  
+  ("(%d%d):(%d%d):(%d%d)"
+   (values :time (list (parse-integer $1)
+                       (parse-integer $2)
+                       (parse-integer $3))))
+
   ;; day, year, time, time zone
-  ("([+%-]%d%d)(%d%d)"      (values :tz (time-zone (parse-integer $1) (parse-integer $2))))
-  ("%d%d%d%d"               (values :year (parse-integer $$)))
-  ("%d%d?"                  (values :day (parse-integer $$)))
+  ("([+%-]%d%d)(%d%d)"
+   (values :tz (time-zone (parse-integer $1) (parse-integer $2))))
+  ("%d%d%d%d"
+   (values :year (parse-integer $$)))
+  ("%d%d?"
+   (values :day (parse-integer $$)))
 
   ;; days, months, and time zones
-  ("%a+"                    (cond
-                             ((position $$ +days+ :test #'string-equal)
-                              (values :day-of-week (position $$ +days+ :test #'string-equal)))
-                             ((position $$ +months+ :test #'string-equal)
-                              (values :month (position $$ +months+ :test #'string-equal)))
-                             (t
-                              (values :tz (rfc822-time-zone $$))))))
+  ("%a+"
+   (cond
+     ((position $$ +days+ :test #'string-equal)
+      (values :day-of-week (position $$ +days+ :test #'string-equal)))
+     ((position $$ +months+ :test #'string-equal)
+      (values :month (position $$ +months+ :test #'string-equal)))
+     (t
+      (values :tz (rfc822-time-zone $$))))))
+
+;;; ----------------------------------------------------
 
 (deflexer rfc3339-date-lexer (s)
-  ("T(%d%d):(%d%d):(%d%d)"  (values :time (list (parse-integer $1)
-                                                (parse-integer $2)
-                                                (parse-integer $3))))
+  ("T(%d%d):(%d%d):(%d%d)"
+   (values :time (list (parse-integer $1)
+                       (parse-integer $2)
+                       (parse-integer $3))))
 
-  ;; partial second (ignored since common lisp doesn't use it in universal time)
-  ("%.%d%d*"                (values :next-token))
+  ;; ignore partial seconds
+  ("%.%d%d*"
+   (values :next-token))
 
   ;; year, month, day
-  ("(%d%d%d%d)%-"           (values :year (parse-integer $1)))
-  ("(%d%d)%-"               (values :month (parse-integer $1)))
-  ("(%d%d)"                 (values :day (parse-integer $1)))
+  ("(%d%d%d%d)%-"
+   (values :year (parse-integer $1)))
+  ("(%d%d)%-"
+   (values :month (parse-integer $1)))
+  ("(%d%d)"
+   (values :day (parse-integer $1)))
 
   ;; time + zone letter
-  ("([+%-]%d%d):(%d%d)"     (values :tz (time-zone (parse-integer $1) (parse-integer $2))))
-  ("%a"                     (values :tz (military-time-zone (char $$ 0)))))
+  ("([+%-]%d%d):(%d%d)"
+   (values :tz (time-zone (parse-integer $1) (parse-integer $2))))
+  ("%a"
+   (values :tz (military-time-zone (char $$ 0)))))
+
+;;; ----------------------------------------------------
 
 (defparser rfc822-date-parser
-  ((start rfc822) $1)
+  (>> (.opt (>> (.is :day-of-week) (.is :comma)))
+      (.let* ((dd   (.is :day))
+              (mm   (.is :month))
+              (yy   (.is :year))
+              (tt   (.is :time))
 
-  ;; universal time
-  ((rfc822 :day-of-week :comma :day :month :year :time :tz)
-   (destructuring-bind (hh mm ss)
-       $6
-     (encode-universal-time ss mm hh $3 (1+ $4) $5 (- $7))))
-  ((rfc822 :error)
-   (error "Illegal RFC822 date")))
+              ;; the time zone is optional, default to GMT
+              (tz     (.opt (.is :tz) 0)))
+
+        ;; construct a universal time
+        (destructuring-bind (h m s)
+            tt
+          (.ret (encode-universal-time s m h dd (1+ mm) yy (- tz)))))))
+
+;;; ----------------------------------------------------
 
 (defparser rfc3339-date-parser
-  ((start rfc3339) $1)
+  (.let* ((yy (.is :year))
+          (mm (.is :month))
+          (dd (.is :day))
+          (tt (.is :time))
 
-  ;; universal time
-  ((rfc3339 :year :month :day :time :tz)
-   (destructuring-bind (hh mm ss)
-       $4
-     (encode-universal-time ss mm hh $3 $2 $1 (- $5))))
-  ((rfc3339 :error)
-   (error "Illegal RFC3339 date")))
+          ;; timezone is optional, default to GMT
+          (tz (.opt (.is :tz) 0)))
+
+    ;; construct a universal time
+    (destructuring-bind (h m s)
+        tt
+      (.ret (encode-universal-time s m h dd mm yy (- tz))))))
+
+;;; ----------------------------------------------------
 
 (defun encode-universal-rfc822-time (date-time-string)
   "Encode a universal time from the format ddd, dd MMM yyyy HH:mm:ss tz."
-  (handler-case
-      (parse #'rfc822-date-parser #'rfc822-date-lexer date-time-string)
-    (condition (c) nil)))
-  
+  (with-lexer (lexer 'rfc822-date-lexer date-time-string)
+    (with-token-reader (token-reader lexer)
+      (parse 'rfc822-date-parser token-reader))))
+
+;;; ----------------------------------------------------
+
 (defun encode-universal-rfc3339-time (date-time-string)
   "Encode a universal time from the format yyyy-MM-ddTHH:mm:ss.fracTZ."
-  (handler-case
-      (parse #'rfc3339-date-parser #'rfc3339-date-lexer date-time-string)
-    (condition (c) nil)))
+  (with-lexer (lexer 'rfc3339-date-lexer date-time-string)
+    (with-token-reader (token-reader lexer)
+      (parse 'rfc3339-date-parser token-reader))))
+
+;;; ----------------------------------------------------
 
 (defun decode-universal-rfc822-time (time)
   "Decode a universal time into the format ddd, dd MMM yyyy HH:mm:ss tz."
@@ -149,6 +207,8 @@
             (tzh (if dst-p (1- tz) tz))
             (tzm (if tzf (* tzf 60) 0)))
         (format nil +rfc822+ day date month year hh mm ss (plusp tz) tzh tzm)))))
+
+;;; ----------------------------------------------------
 
 (defun decode-universal-rfc3339-time (time)
   "Decode a universal time into the format yyyy-MM-ddYHH:mm:ss+/-hh:mm."
