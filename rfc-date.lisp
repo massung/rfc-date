@@ -295,14 +295,11 @@
 
 ;;; ----------------------------------------------------
 
-(defun unit-test ()
+(defun unit-test (&optional (now (get-universal-time)))
   "Make sure that all the formats work."
-  (format t "~9a| ~40a | ~10a | Fail?~%" "Format" "Encoding" "Time")
-  (format t "~9@{~c~:*~}+~42@{~c~:*~}+~12@{~c~:*~}+-------~%" #\- #\- #\-)
+  (format t "~9a| ~40a | ~10a | Fail~%" "Format" "Encoding" "Time")
+  (format t "~9@{~c~:*~}+~42@{~c~:*~}+~12@{~c~:*~}+------~%" #\- #\- #\-)
   (loop
-     with now = (get-universal-time)
-
-     ;; loop over all the formats supported
      for (f) in +rfc-formats+
 
      ;; encode the current time into a string, and decode it back
@@ -313,4 +310,5 @@
      for okp = (= now e)
 
      ;; show the debug output?
-     do (format t "~9a| ~40a | ~10d | ~:[X~;~]~%" f d e okp)))
+     do (format t "~9a| ~40a | ~10d | ~:[X~;~]~%" f d e okp))
+  (format t "~9@{~c~:*~}+~42@{~c~:*~}+~12@{~c~:*~}+------~%" #\- #\- #\-))
