@@ -32,5 +32,6 @@ If you'd like to test each of the formats, see how they end up printing dates, e
 
 While no helper function exists in the package for converting between date/time formats, it's easy enough to code one up...
 
-    (defun convert-rfc-time (time from to)
-      (decode-universal-rfc-time (encode-universal-rfc-time time from) to))
+    (defun convert-rfc-time (time-string from to)
+      "Parse a date/time string in one format and conver it to another."
+      (decode-universal-rfc-time (encode-universal-rfc-time time-string from) to))
