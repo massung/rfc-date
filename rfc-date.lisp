@@ -279,7 +279,7 @@
                        (#\m (format s "~d" month))
                        (#\D (format s "~a" (subseq day 0 3)))
                        (#\l (format s "~a" day))
-                       (#\d (format s "~2d" date))
+                       (#\d (format s "~d" date))
                        (#\H (format s "~d" hh))
                        (#\i (format s "~2,'0d" mm))
                        (#\s (format s "~2,'0d" ss))
