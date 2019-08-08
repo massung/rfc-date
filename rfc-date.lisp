@@ -41,7 +41,7 @@
 ;;; O = time zone in ordinal format (+0000)
 ;;; Z = time zone in named format (UTC)
 
-(defconstant +rfc-formats+
+(defparameter *rfc-formats*
   '((:rfc822  "D, d M y H:i:s O")
     (:rfc850  "l, d-M-y H:i:s Z")
     (:rfc1036 "D, d M y H:i:s O")
@@ -58,19 +58,19 @@
 
 ;;; ----------------------------------------------------
 
-(defconstant +days+
+(defparameter *days*
   '("Monday" "Tuesday" "Wednesday" "Thurday" "Friday" "Saturday" "Sunday")
   "Days of the week.")
 
 ;;; ----------------------------------------------------
 
-(defconstant +months+
+(defparameter *months*
   '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")
   "Abbreviated months of the year.")
 
 ;;; ----------------------------------------------------
 
-(defconstant +zones+
+(defparameter *zones*
   '(("GMT" +000) ("UTC" +000)
     ("EST" -500) ("EDT" -400)
     ("CST" -600) ("CDT" -500)
@@ -80,7 +80,7 @@
 
 ;;; ----------------------------------------------------
 
-(defconstant +rfc-format-re-mapping+
+(defparameter *rfc-format-re-mapping*
   '((#\y :year       "(%d%d)")
     (#\Y :year       "(%d%d%d%d)")
     (#\M :month-name "(%a+)")
@@ -109,7 +109,7 @@
        for c across format
 
        ;; lookup the character for a sub-pattern
-       for (name m) = (rest (assoc c +rfc-format-re-mapping+))
+       for (name m) = (rest (assoc c *rfc-format-re-mapping*))
 
        ;; write the sub-pattern or literal character
        do (format s "~:[~*~:[~;%~]~a~;~a~]" m m (reserved-char-p c) c)
@@ -126,8 +126,8 @@
 (defparameter *rfc-re-mapping*
   (flet ((map-rfc-format (pair)
            (cons (first pair) (compile-date-re (second pair)))))
-    (mapcar #'map-rfc-format +rfc-formats+))
-  "All the +rfc-formats+, but with compiled re patterns.")
+    (mapcar #'map-rfc-format *rfc-formats*))
+  "All the *rfc-formats*, but with compiled re patterns.")
 
 ;;; ----------------------------------------------------
 
@@ -147,7 +147,7 @@
   "Returns the index into the year for the month name."
   (flet ((begins-with (m s)
            (string-equal m s :start1 0 :end1 (min (length m) 3))))
-    (let ((i (position m +months+ :test #'begins-with)))
+    (let ((i (position m *months* :test #'begins-with)))
       (if i
           (1+ i)
         (error "Invalid month ~s" m)))))
@@ -195,7 +195,7 @@
 
            ;; get the time zone from the name or the hour/min
            (zone (if zone-name
-                     (let ((tz (assoc zone-name +zones+ :test #'string=)))
+                     (let ((tz (assoc zone-name *zones* :test #'string=)))
                        (if tz
                            (/ (second tz) 100)
                          (military-time-zone (char zone-name 0))))
@@ -215,7 +215,7 @@
        ;; months might be named or the integer
        (if month
            (parse-integer month)
-         (1+ (position month-name +months+ :test #'search)))
+         (1+ (position month-name *months* :test #'search)))
 
        ;; the year might be in 2- or 4-digit format
        (let ((yy (parse-integer year)))
@@ -251,8 +251,8 @@
         (truncate (abs zone))
 
       ;; get the day of the week and month name
-      (let* ((day (nth day-of-week +days+))
-             (month-name (nth (1- month) +months+))
+      (let* ((day (nth day-of-week *days*))
+             (month-name (nth (1- month) *months*))
 
              ;; get the time zone information
              (tzh (if dst-p (1- tz) tz))
@@ -260,7 +260,7 @@
              (tzm (if tzf (* tzf 60) 0))
 
              ;; get the date format that should be applied
-             (date-format (assoc format +rfc-formats+)))
+             (date-format (assoc format *rfc-formats*)))
         (if (null date-format)
             (error "Unknown RFC date/time format ~s" format)
           (with-output-to-string (s)
@@ -300,7 +300,7 @@
   (format t "~9a| ~40a | ~10a | Fail~%" "Format" "Encoding" "Time")
   (format t "~9@{~c~:*~}+~42@{~c~:*~}+~12@{~c~:*~}+------~%" #\- #\- #\-)
   (loop
-     for (f) in +rfc-formats+
+     for (f) in *rfc-formats*
 
      ;; encode the current time into a string, and decode it back
      for d = (decode-universal-rfc-time now f)
