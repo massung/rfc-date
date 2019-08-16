@@ -21,7 +21,7 @@ Again, the *format* parameter defaults to **:rfc822**.
     CL-USER > (decode-universal-rfc-time (get-universal-time) :rfc3339)
     "2013-08-29T12:09:30-06:00"
 
-    CL-USER > (encode-universal-rfc3339-time * :rfc3339)
+    CL-USER > (encode-universal-rfc-time * :rfc3339)
     3586745370
 
 ## Testing
